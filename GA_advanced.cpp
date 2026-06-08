@@ -9,10 +9,6 @@
 #include <random>
 #include <chrono>
 
-// =================================================================
-// 1. СТРУКТУРА МІСТА ТА СЕРЕДОВИЩА TSP
-// =================================================================
-
 struct City {
     int id;
     double x, y;
@@ -66,10 +62,6 @@ public:
     int getNumCities() const { return cities.size(); }
 };
 
-// =================================================================
-// 2. ПОДАННЯ ІНДИВІДА
-// =================================================================
-
 struct Individual {
     std::vector<int> route;
     long long total_distance;
@@ -81,10 +73,6 @@ struct Individual {
         total_distance += env.getDistance(route[n - 1], route[0]);
     }
 };
-
-// =================================================================
-// 3. ПРОСУНУТИЙ ГЕНЕТИЧНИЙ АЛГОРИТМ (GPX3 + MUTATION)
-// =================================================================
 
 class AdvancedGeneticAlgorithm {
 private:
@@ -124,7 +112,6 @@ public:
         return best;
     }
 
-    // ПРОСУНУТИЙ ГРАФОВИЙ КРОСОВЕР GPX3
     Individual gpx3Crossover(const Individual& parent1, const Individual& parent2) {
         int n = env.getNumCities();
         Individual child; 
@@ -198,7 +185,6 @@ public:
         return child;
     }
 
-    // Мутація інверсією
     void mutate(Individual& ind, double rate = 0.08) {
         std::uniform_real_distribution<double> chance(0, 1);
         if (chance(rng) < rate) {
@@ -212,12 +198,10 @@ public:
     void evolve(int current_generation) {
         std::vector<Individual> new_pop;
         
-        // Елітизм
         auto best_it = std::min_element(population.begin(), population.end(), 
             [](const Individual& a, const Individual& b) { return a.total_distance < b.total_distance; });
         new_pop.push_back(*best_it);
 
-        // Фіксуємо точку для графіка збіжності
         convergence_history.push_back({current_generation, best_it->total_distance});
 
         while (new_pop.size() < population_size) {
@@ -235,10 +219,6 @@ public:
             [](const Individual& a, const Individual& b) { return a.total_distance < b.total_distance; });
     }
 };
-
-// =================================================================
-// СЕРВІСНІ ФУНКЦІЇ ДЛЯ ЗВІТІВ ТА ГРАФІКИ
-// =================================================================
 
 void printBestRoute(const Individual& best, const TSP_Environment& env) {
     std::cout << "\n--- Фінальний маршрут (Послідовність ID міст) ---\n";
@@ -277,7 +257,6 @@ void exportConvergenceToSVG(const std::string& filename, const std::vector<std::
     file << "<text x=\"" << padding - 10 << "\" y=\"" << padding + 5 << "\" font-size=\"12\" text-anchor=\"end\" fill=\"#666\">" << max_dist << "</text>\n";
     file << "<text x=\"" << padding - 10 << "\" y=\"" << height - padding + 5 << "\" font-size=\"12\" text-anchor=\"end\" fill=\"#666\">" << min_dist << "</text>\n";
 
-    // Лінія графіка буде синьою для просунутого ГА (щоб візуально відрізняти від стандартного)
     file << "<polyline points=\"";
     for (const auto& point : history) { file << getX(point.first) << "," << getY(point.second) << " "; }
     file << "\" fill=\"none\" stroke=\"#007bff\" stroke-width=\"2.5\" />\n";
@@ -303,7 +282,6 @@ void exportRouteToSVG(const std::string& filename, const Individual& best, const
     file << "<svg width=\"900\" height=\"900\" xmlns=\"http://www.w3.org/2000/svg\">\n";
     file << "<rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>\n"; 
 
-    // Малюємо лінії (ребра маршруту) — фірмові сині
     file << "<g stroke=\"#007bff\" stroke-width=\"2\" fill=\"none\">\n";
     for (size_t i = 0; i < best.route.size(); ++i) {
         const City& c1 = env.cities[best.route[i]];
@@ -318,7 +296,6 @@ void exportRouteToSVG(const std::string& filename, const Individual& best, const
     }
     file << "</g>\n";
 
-    // Малюємо міста (вузли) червоним кольором + підписи ID
     file << "<g fill=\"#dc3545\">\n";
     for (const auto& c : env.cities) {
         double x = (c.x - min_x) * scale + padding;
@@ -333,10 +310,6 @@ void exportRouteToSVG(const std::string& filename, const Individual& best, const
     std::cout << "[!] Карту маршруту успішно збережено у файл: " << filename << "\n";
 }
 
-// =================================================================
-// ГОЛОВНА ФУНКЦІЯ
-// =================================================================
-
 int main() {
     std::string_view locale = "uk_UA.UTF-8";
     std::setlocale(LC_ALL, locale.data());
@@ -346,12 +319,12 @@ int main() {
     
     if (env.loadFromFile(filename)) {
         int population_size = 100;
-        int generations = 1000; // Робимо 1000 поколінь для чесного порівняння зі Стандартним ГА
+        int generations = 1000;
 
         AdvancedGeneticAlgorithm ga(population_size, env);
         ga.initializePopulation();
         
-        std::cout << "Просунута еволюція запущена (GPX3 + Mutation)...\n";
+        std::cout << "Покращена еволюція запущена (GPX3 + Mutation)...\n";
 
         auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -368,7 +341,7 @@ int main() {
         Individual best_final = ga.getBestIndividual();
         
         std::cout << "\n============================================\n";
-        std::cout << "ЗВІТ: ПРОСУНУТИЙ ГЕНЕТИЧНИЙ АЛГОРИТМ (GPX3)\n";
+        std::cout << "ЗВІТ: ПОКРАЩЕНИЙ ГЕНЕТИЧНИЙ АЛГОРИТМ (GPX3)\n";
         std::cout << "============================================\n";
         std::cout << "Файл даних: " << filename << "\n";
         std::cout << "Найкраща відстань: " << best_final.total_distance << "\n";
@@ -382,10 +355,8 @@ int main() {
 
         std::cout << "Час виконання: " << duration.count() << " мс (" << duration.count() / 1000.0 << " сек)\n";
         
-        // Порядок міст
         printBestRoute(best_final, env);
         
-        // Генерація графіки
         exportConvergenceToSVG("convergence_advanced.svg", ga.convergence_history);
         exportRouteToSVG("route_advanced.svg", best_final, env);
         std::cout << "(Відкрийте файли .svg у будь-якому браузері для перегляду карти та графіка)\n";
