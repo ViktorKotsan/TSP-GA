@@ -17,8 +17,24 @@ There are 4 `.cpp` and 3 `.txt` files:
 
 In order to read a specific `.txt` file you need to change this string in a `.cpp` file in the `main()` function:
 
-```c++
+```cpp
   std::string filename = "number_of_cities.txt";
 ```
 
 Every `.cpp` file has this line.
+
+To change constraints in `GA_constrained.cpp` you need to change this set of forbidden links between cities in the `main()` function:
+
+```cpp
+std::vector<std::pair<int, int>> forbidden_links = {
+            {1, 2}, 
+            {5, 6},
+            {10, 20},
+            {1, 50},
+            {58, 86},
+            {14, 44},
+            {66,71}
+        };
+```
+
+Each pair is symmetrical (i.e. {1, 2} = {2, 1}).
