@@ -6,7 +6,7 @@ There are 4 `.cpp` and 3 `.txt` files:
 - `GA_standard.cpp` - explained as the canonical **Ordered Crossover (OX)** baseline.
 - `GA_advanced.cpp` - detailed with the **Generalized Partition Crossover (GPX3)**, graph topology analysis, and **Path Collapsing** operations.
 - `GA.cpp` - presented as a hybrid **Memetic Optimization System** pairing global GPX3 recombination with fast **2-opt local search**.
-- `GA_constrained.cpp` - structured around the **External Penalty Method** with $\mathcal{P}_{inf} = 10^{12}$ constraint enforcement.
+- `GA_constrained.cpp` - `GA.cpp` but also structured around the **External Penalty Method** with $\mathcal{P}_{inf} = 10^{12}$ constraint enforcement.
 
 `.txt` files:
 - `16.txt` - contains `16` cities, mostly used for a base case for weaker algorithms. This files requires you to use GEO metric instead of euclidian.
