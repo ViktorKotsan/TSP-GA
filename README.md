@@ -38,3 +38,6 @@ std::vector<std::pair<int, int>> forbidden_links = {
 ```
 
 Each pair is symmetrical (i.e. {1, 2} = {2, 1}).
+
+# Reference
+All the data taken from this repository: https://github.com/mastqe/tsplib
