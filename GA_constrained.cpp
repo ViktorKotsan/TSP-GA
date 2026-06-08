@@ -9,10 +9,6 @@
 #include <random>
 #include <chrono>
 
-// =================================================================
-// 1. СТРУКТУРА МІСТА ТА СЕРЕДОВИЩА TSP З ОБМЕЖЕННЯМИ
-// =================================================================
-
 struct City {
     int id;
     double x, y;
@@ -23,7 +19,6 @@ public:
     std::vector<City> cities;
     std::vector<std::vector<long long>> distance_matrix;
     
-    // Великий штраф для симуляції відсутності дороги (Infinity)
     const long long PENALTY_INFINITY = 1000000000000LL; 
 
     void addCity(int id, double x, double y) {
@@ -45,23 +40,20 @@ public:
         }
     }
 
-    // Накладання обмежень на переміщення між містами
     void applyRouteConstraints(const std::vector<std::pair<int, int>>& forbidden_links) {
         for (const auto& link : forbidden_links) {
             int idA = link.first;
             int idB = link.second;
             int idxA = -1, idxB = -1;
 
-            // Шукаємо внутрішні індекси міст за їхніми оригінальними ID
             for (size_t i = 0; i < cities.size(); ++i) {
                 if (cities[i].id == idA) idxA = i;
                 if (cities[i].id == idB) idxB = i;
             }
 
-            // Якщо обидва міста існують у вибірці, блокуємо ребро між ними
             if (idxA != -1 && idxB != -1) {
                 distance_matrix[idxA][idxB] = PENALTY_INFINITY;
-                distance_matrix[idxB][idxA] = PENALTY_INFINITY; // Симетричний TSP
+                distance_matrix[idxB][idxA] = PENALTY_INFINITY;
                 std::cout << "[Constraint] Шлях між містами з ID " << idA << " та " << idB << " УСПІШНО ЗАБЛОКОВАНО.\n";
             } else {
                 std::cout << "[Constraint] Попередження: Не вдалося заблокувати шлях (" << idA << " -> " << idB << "). Перевірте ID міст.\n";
@@ -93,10 +85,6 @@ public:
     int getNumCities() const { return cities.size(); }
 };
 
-// =================================================================
-// 2. ПОДАННЯ ІНДИВІДА
-// =================================================================
-
 struct Individual {
     std::vector<int> route;
     long long total_distance;
@@ -108,10 +96,6 @@ struct Individual {
         total_distance += env.getDistance(route[n - 1], route[0]);
     }
 };
-
-// =================================================================
-// 3. ГІБРИДНИЙ (МЕМІЧНИЙ) ГЕНЕТИЧНИЙ АЛГОРИТМ
-// =================================================================
 
 class GeneticAlgorithm {
 private:
@@ -233,7 +217,7 @@ public:
             Individual child = gpx3Crossover(p1, p2);
             mutate(child);
             child.calculateFitness(env);
-            localSearch2Opt(child); // Тут 2-opt також виправляє штрафні ребра
+            localSearch2Opt(child);
             new_pop.push_back(child);
         }
         population = new_pop;
@@ -243,10 +227,6 @@ public:
         return *std::min_element(population.begin(), population.end(), [](const Individual& a, const Individual& b) { return a.total_distance < b.total_distance; });
     }
 };
-
-// =================================================================
-// СЕРВІСНІ ФУНКЦІЇ ДЛЯ ЗВІТІВ ТА ГРАФІКИ
-// =================================================================
 
 void printBestRoute(const Individual& best, const TSP_Environment& env) {
     std::cout << "\n--- Фінальний маршрут (Послідовність ID міст) ---\n";
@@ -268,7 +248,6 @@ void exportConvergenceToSVG(const std::string& filename, const std::vector<std::
     long long min_dist = history.back().second;
     int total_gens = history.size();
 
-    // Якщо перші покоління мали штрафи, відсікаємо їх для адекватного масштабу графіка
     if (max_dist >= 1000000000000LL) {
         max_dist = history.size() > 1 ? history[1].second : min_dist + 500;
         for (const auto& h : history) {
@@ -289,7 +268,7 @@ void exportConvergenceToSVG(const std::string& filename, const std::vector<std::
 
     auto getX = [&](int gen) { return padding + (double)gen / total_gens * (width - 2 * padding); };
     auto getY = [&](long long dist) { 
-        if (dist >= 1000000000000LL) dist = max_dist; // щоб не ламати графік до небес
+        if (dist >= 1000000000000LL) dist = max_dist;
         return height - padding - ((double)(dist - min_dist) / (max_dist - min_dist) * (height - 2 * padding)); 
     };
 
@@ -349,10 +328,6 @@ void exportRouteToSVG(const std::string& filename, const Individual& best, const
     std::cout << "[!] Карту маршруту успішно збережено у файл: " << filename << "\n";
 }
 
-// =================================================================
-// ГОЛОВНА ФУНКЦІЯ
-// =================================================================
-
 int main() {
     std::string_view locale = "uk_UA.UTF-8";
     std::setlocale(LC_ALL, locale.data());
@@ -372,7 +347,6 @@ int main() {
             {66,71}
         };
 
-        // Застосовуємо наші обмеження до матриці відстаней
         env.applyRouteConstraints(forbidden_links);
         
         int population_size = 100;
@@ -405,7 +379,6 @@ int main() {
         std::cout << "============================================\n";
         std::cout << "Файл даних: " << file << "\n";
         
-        // Перевіряємо чи фінальний маршрут чистий від штрафів
         if (best_final.total_distance >= env.PENALTY_INFINITY) {
             std::cout << "СТАТУС: КРИТИЧНА ПОМИЛКА! Алгоритм не зміг знайти жодного маршруту без порушення обмежень.\n";
             std::cout << "Причина: Занадто жорсткі обмеження або ізольовані міста.\n";
@@ -416,10 +389,8 @@ int main() {
         
         std::cout << "Час виконання еволюції: " << duration.count() << " мс (" << duration.count() / 1000.0 << " сек)\n";
         
-        // Виведення порядку міст
         printBestRoute(best_final, env);
         
-        // Генерація графіків
         exportConvergenceToSVG("convergence_constrained.svg", ga.convergence_history);
         exportRouteToSVG("route_constrained.svg", best_final, env);
         
