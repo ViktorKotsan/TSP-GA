@@ -9,10 +9,6 @@
 #include <random>
 #include <chrono>
 
-// =================================================================
-// 1. СТРУКТУРА МІСТА ТА СЕРЕДОВИЩА TSP
-// =================================================================
-
 struct City {
     int id;
     double x, y;
@@ -66,10 +62,6 @@ public:
     int getNumCities() const { return cities.size(); }
 };
 
-// =================================================================
-// 2. ПОДАННЯ ІНДИВІДА
-// =================================================================
-
 struct Individual {
     std::vector<int> route;
     long long total_distance;
@@ -81,10 +73,6 @@ struct Individual {
         total_distance += env.getDistance(route[n - 1], route[0]);
     }
 };
-
-// =================================================================
-// 3. СТАНДАРТНИЙ ГЕНЕТИЧНИЙ АЛГОРИТМ (OX + MUTATION)
-// =================================================================
 
 class StandardGeneticAlgorithm {
 private:
@@ -189,10 +177,6 @@ public:
     }
 };
 
-// =================================================================
-// СЕРВІСНІ ФУНКЦІЇ ДЛЯ ЗВІТІВ ТА ГРАФІКИ
-// =================================================================
-
 void printBestRoute(const Individual& best, const TSP_Environment& env) {
     std::cout << "\n--- Фінальний маршрут (Послідовність ID міст) ---\n";
     for (int idx : best.route) {
@@ -253,9 +237,8 @@ void exportRouteToSVG(const std::string& filename, const Individual& best, const
     double scale = 800.0 / std::max(max_x - min_x, max_y - min_y);
 
     file << "<svg width=\"900\" height=\"900\" xmlns=\"http://www.w3.org/2000/svg\">\n";
-    file << "<rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>\n"; // Точно такий самий фон
+    file << "<rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>\n";
 
-    // Малюємо лінії (ребра маршруту) — фірмові сині
     file << "<g stroke=\"#007bff\" stroke-width=\"2\" fill=\"none\">\n";
     for (size_t i = 0; i < best.route.size(); ++i) {
         const City& c1 = env.cities[best.route[i]];
@@ -270,7 +253,6 @@ void exportRouteToSVG(const std::string& filename, const Individual& best, const
     }
     file << "</g>\n";
 
-    // Малюємо міста (вузли) червоним кольором + підписи ID міст
     file << "<g fill=\"#dc3545\">\n";
     for (const auto& c : env.cities) {
         double x = (c.x - min_x) * scale + padding;
@@ -284,10 +266,6 @@ void exportRouteToSVG(const std::string& filename, const Individual& best, const
     
     std::cout << "[!] Карту маршруту успішно збережено у файл: " << filename << "\n";
 }
-
-// =================================================================
-// ГОЛОВНА ФУНКЦІЯ
-// =================================================================
 
 int main() {
     std::string_view locale = "uk_UA.UTF-8";
@@ -334,10 +312,8 @@ int main() {
 
         std::cout << "Час виконання: " << duration.count() << " мс (" << duration.count() / 1000.0 << " сек)\n";
         
-        // Порядок міст
         printBestRoute(best_final, env);
         
-        // Генерація графіки
         exportConvergenceToSVG("convergence_standard.svg", ga.convergence_history);
         exportRouteToSVG("route_standard.svg", best_final, env);
         std::cout << "(Відкрийте файли .svg у будь-якому браузері для перегляду карти та графіка)\n";
